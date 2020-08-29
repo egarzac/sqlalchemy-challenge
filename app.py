@@ -38,8 +38,8 @@ def home():
     f"/api/v1.0/precipitation<br/>"
     f"/api/v1.0/stations<br/>"
     f"/api/v1.0/tobs<br/>"
-    f"/api/v1.0/2016-08-23<br/>"
-    f"/api/v1.0/2016-08-23/2016-08-30<br/>"
+    f"/api/v1.0/start_date      --Format:YYYY-MM-DD. For example /api/v1.0/2016-06-28<br/>"
+    f"/api/v1.0/start_date>/end_date  --Format: YYYY-MM-DD for start and end date. End_date must be > Start_date. For example /api/v1.0/2016-08-24/2016-09-24<br/>"
 )
 
 # 4. Queries
@@ -81,14 +81,26 @@ def tobs():
     all_tobs = list(np.ravel(results))
     return jsonify(all_tobs)
 
-# Route 4: Start Date (work in progress)
-@app.route("/api/v1.0/2016-08-23")
-def start():
+# Route 4: Start Date
+@app.route("/api/v1.0/<start>")
+
+def start(start):
     session = Session(engine)
-    results = session.query(func.min(Measurement.tobs).label('min'),func.max(Measurement.tobs).label('max'),func.avg(Measurement.tobs).label('avg')).all()
+    results = session.query(func.min(Measurement.tobs).label('min'),func.max(Measurement.tobs) \
+    .label('max'),func.avg(Measurement.tobs).label('avg')).filter(Measurement.date >= start).all()
     session.close()
     maxtob = list(np.ravel(results))
     return jsonify(maxtob)
+
+# Route 5: Start Date/End Date
+@app.route("/api/v1.0/<start2>/<end>")
+def start2(start2, end):
+    session = Session(engine)
+    results = session.query(func.min(Measurement.tobs).label('min'),func.max(Measurement.tobs) \
+    .label('max'),func.avg(Measurement.tobs).label('avg')).filter(Measurement.date >= start2).filter(Measurement.date <= end).all()
+    session.close()
+    maxtob2 = list(np.ravel(results))
+    return jsonify(maxtob2)
 
 if __name__ == "__main__":
     app.run(debug=True)
